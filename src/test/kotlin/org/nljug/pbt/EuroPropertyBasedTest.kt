@@ -14,38 +14,40 @@ class EuroPropertyBasedTest: StringSpec({
 
     "Sum of Euros is equal to the separate Euros" {
         checkAll(Arb.positiveInt(), Arb.positiveInt()) { a, b ->
-            Euro.fromCents(a) shouldBe Euro.fromCents(b)
+            Euro.fromCents(a) + Euro.fromCents(b) shouldBe Euro.fromCents(a + b)
         }
-    }
-
-    fun Arb.Companion.euro() = arbitrary {
-        val cents = Arb.positiveInt().bind()
-        Euro.fromCents(cents)
     }
 
     "Sum of positive Euros is equal to the separate Euros (with custom arb)" {
-        checkAll(Arb.euro(), Arb.euro()) { a, b ->
-            a shouldBe b
+        val customEuroArb = arbitrary {
+            val cents = Arb.positiveInt().bind()
+            Euro.fromCents(cents)
+        }
+
+        checkAll(customEuroArb, customEuroArb) { a, b ->
+            a + b shouldBe Euro.fromCents(a.toCents() + b.toCents())
         }
     }
 
+    val euroEdgeCases = listOf(
+        Euro.fromCents(0)
+    )
+
     val euroShrinker = Shrinker<Euro> {
         euro -> listOf(
-            Euro.fromCents(euro.toCents() + 1),
             Euro.fromCents(euro.toCents() - 1),
-            Euro.fromCents(euro.toCents() + 100),
-            Euro.fromCents(euro.toCents() - 100),
+            Euro.fromCents(euro.toCents() - 100)
         )
     }
 
-    fun Arb.Companion.euroWithShrinking() = arbitrary(shrinker = euroShrinker) {
+    fun Arb.Companion.euro() = arbitrary(edgecases = euroEdgeCases, shrinker = euroShrinker) {
         val cents = Arb.positiveInt().bind()
         Euro.fromCents(cents)
     }
 
     "Sum of positive Euros is equal to the separate Euros (with custom shrinking arb)" {
-        checkAll(Arb.euroWithShrinking(), Arb.euro()) { a, b ->
-            a shouldBe b
+        checkAll(Arb.euro(), Arb.euro()) { a, b ->
+            a + b shouldBe Euro.fromCents(a.toCents() + b.toCents())
         }
     }
 })

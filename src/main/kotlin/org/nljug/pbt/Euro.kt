@@ -1,6 +1,10 @@
 package org.nljug.pbt
 
 data class Euro(val euro: Int, val cents: Int = 0) {
+    init {
+        require(euro >= 0 && cents >= 0) { "Euro class cannot represent a negative amount" }
+    }
+
     operator fun plus(other: Euro): Euro {
         val totalInCents = this.toCents() + other.toCents()
         return fromCents(totalInCents)
