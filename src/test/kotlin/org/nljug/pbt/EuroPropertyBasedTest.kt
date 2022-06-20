@@ -8,7 +8,7 @@ import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.positiveInt
 import io.kotest.property.checkAll
 
-class EuroPropertyBasedTest: StringSpec({
+class EuroPropertyBasedTest : StringSpec({
     infix fun Euro.shouldBe(other: Euro) =
         this.toCents() shouldBeExactly other.toCents()
 
@@ -33,8 +33,8 @@ class EuroPropertyBasedTest: StringSpec({
         Euro.fromCents(0)
     )
 
-    val euroShrinker = Shrinker<Euro> {
-        euro -> listOf(
+    val euroShrinker = Shrinker<Euro> { euro ->
+        listOf(
             Euro.fromCents(euro.toCents() - 1),
             Euro.fromCents(euro.toCents() - 100)
         )

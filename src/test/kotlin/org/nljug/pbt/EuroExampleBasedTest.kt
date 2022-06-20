@@ -3,10 +3,9 @@ package org.nljug.pbt
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.ints.shouldBeExactly
-import io.kotest.matchers.should
 import io.kotest.matchers.string.shouldContain
 
-class EuroExampleBasedTest: StringSpec({
+class EuroExampleBasedTest : StringSpec({
     infix fun Euro.shouldBe(other: Euro) =
         this.toCents() shouldBeExactly other.toCents()
 
@@ -32,9 +31,9 @@ class EuroExampleBasedTest: StringSpec({
     }
 
     "An amount in Euros cannot be negative" {
-       val exception = shouldThrow<IllegalArgumentException> {
-           Euro.fromCents(-100)
-       }
+        val exception = shouldThrow<IllegalArgumentException> {
+            Euro.fromCents(-100)
+        }
 
         exception.message shouldContain "Euro class cannot represent a negative amount"
     }
