@@ -1,31 +1,33 @@
 package org.nljug.pbt
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.property.Arb
 import io.kotest.property.Shrinker
 import io.kotest.property.arbitrary.arbitrary
+import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.positiveInt
+import io.kotest.property.arbs.firstName
 import io.kotest.property.checkAll
 
-class EuroPropertyBasedTest : StringSpec({
+class EuroPropertyBasedTest : FeatureSpec({
     infix fun Euro.shouldBe(other: Euro) =
         this.toCents() shouldBeExactly other.toCents()
 
-    "Sum of Euros is equal to the separate Euros" {
-        checkAll(Arb.positiveInt(), Arb.positiveInt()) { a, b ->
-            Euro.fromCents(a) + Euro.fromCents(b) shouldBe Euro.fromCents(a + b)
-        }
-    }
+    feature("Sum of all balances should always be zero") {
+        checkAll(
+            Arb.positiveInt(), Arb.list(Arb.firstName(), 2..4)
+        ) { totalAmount, firstNames ->
+            val payees = firstNames.map { it.name }
+            val payer = payees.random()
 
-    "Sum of positive Euros is equal to the separate Euros (with custom arb)" {
-        val customEuroArb = arbitrary {
-            val cents = Arb.positiveInt().bind()
-            Euro.fromCents(cents)
-        }
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment(payer, payees, Euro.fromCents(totalAmount))
 
-        checkAll(customEuroArb, customEuroArb) { a, b ->
-            a + b shouldBe Euro.fromCents(a.toCents() + b.toCents())
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
+
+            sumOfBalances shouldBe Euro(0)
         }
     }
 
@@ -45,9 +47,20 @@ class EuroPropertyBasedTest : StringSpec({
         Euro.fromCents(cents)
     }
 
-    "Sum of positive Euros is equal to the separate Euros (with custom shrinking arb)" {
-        checkAll(Arb.euro(), Arb.euro()) { a, b ->
-            a + b shouldBe Euro.fromCents(a.toCents() + b.toCents())
+    feature("Sum of all balances should always be zero (with custom shrinking arb)") {
+        checkAll(
+            Arb.euro(), Arb.list(Arb.firstName(), 2..5)
+        ) { totalAmount, firstNames ->
+            val payees = firstNames.map { it.name }
+            val payer = payees.random()
+
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment(payer, payees, totalAmount)
+
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
+
+            sumOfBalances shouldBe Euro(0)
         }
     }
 })

@@ -1,40 +1,76 @@
 package org.nljug.pbt
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeExactly
-import io.kotest.matchers.string.shouldContain
 
-class EuroExampleBasedTest : StringSpec({
+class EuroExampleBasedTest : FeatureSpec({
     infix fun Euro.shouldBe(other: Euro) =
         this.toCents() shouldBeExactly other.toCents()
 
-    "Sum of whole Euros is calculated correctly" {
-        val a = Euro.fromCents(100)
-        val b = Euro.fromCents(200)
+    feature("Sum of all balances should always be zero") {
+        scenario("Willem pays for all including himself") {
+            val payees = listOf("Willem", "Henk", "Jan")
+            val payer = "Willem"
 
-        a + b shouldBe Euro.fromCents(300)
-    }
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment(payer, payees, Euro.fromCents(90))
 
-    "Sum of Euros with cents is calculated correctly" {
-        val a = Euro.fromCents(135)
-        val b = Euro.fromCents(270)
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
 
-        a + b shouldBe Euro.fromCents(405)
-    }
-
-    "An amount of Euro plus zero is equal to that same amount" {
-        val a = Euro.fromCents(101)
-        val b = Euro.fromCents(0)
-
-        a + b shouldBe Euro.fromCents(101)
-    }
-
-    "An amount in Euros cannot be negative" {
-        val exception = shouldThrow<IllegalArgumentException> {
-            Euro.fromCents(-100)
+            sumOfBalances shouldBe Euro(0)
         }
 
-        exception.message shouldContain "Euro class cannot represent a negative amount"
+        scenario("Willem pays for all excluding himself") {
+            val payees = listOf("Henk", "Jan")
+            val payer = "Willem"
+
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment(payer, payees, Euro.fromCents(90))
+
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
+
+            sumOfBalances shouldBe Euro(0)
+        }
+
+        scenario("Willem pays a negative amount for all") {
+            val payees = listOf("Willem", "Henk", "Jan")
+            val payer = "Willem"
+
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment(payer, payees, Euro.fromCents(-90))
+
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
+
+            sumOfBalances shouldBe Euro(0)
+        }
+
+        scenario("Willem pays a big amount for all") {
+            val payees = listOf("Willem", "Henk", "Jan")
+            val payer = "Willem"
+
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment(payer, payees, Euro.fromCents(30942))
+
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
+
+            sumOfBalances shouldBe Euro(0)
+        }
+
+        scenario("Willem and Henk both pay something for the group") {
+            val payees = listOf("Willem", "Henk", "Jan")
+
+            val settleService = PaymentSettlementService()
+            settleService.settlePayment("Willem", payees, Euro.fromCents(30))
+            settleService.settlePayment("Henk", payees, Euro.fromCents(30))
+
+            val sumOfBalances = settleService.balances.values
+                .fold(Euro(0)) { sum, balance -> sum + balance }
+
+            sumOfBalances shouldBe Euro(0)
+        }
     }
 })
