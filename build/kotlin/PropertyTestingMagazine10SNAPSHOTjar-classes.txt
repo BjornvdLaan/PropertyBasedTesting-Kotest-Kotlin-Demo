@@ -1,1 +1,0 @@
-/Users/bjorn/Develop/PropertyBasedTesting-Kotest-Kotlin-Demo/build/classes/kotlin/main/org/nljug/pbt/Euro$Companion.class:/Users/bjorn/Develop/PropertyBasedTesting-Kotest-Kotlin-Demo/build/classes/kotlin/main/org/nljug/pbt/Euro.class
